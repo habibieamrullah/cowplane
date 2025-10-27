@@ -20,340 +20,331 @@
         <div id="container"></div>
         <script>
             
-			var currentWidth = 1280;
-			var currentHeight = 720;
-			currentWidth = currentHeight * (innerWidth/innerHeight);
-			
-			console.log("Original Width: " + innerWidth + " Current Game Width: " + currentWidth);
-			console.log("Original Height: " + innerHeight + " Current Game Height: " + currentHeight);
-			
-			var config = {
-				type: Phaser.AUTO,
-				backgroundColor: 'white',
-				scale: {
-					mode: Phaser.Scale.FIT,
-    				autoCenter: Phaser.Scale.CENTER_BOTH,
-					_parent: 'container',
-					width: currentWidth,
-					height: currentHeight,
-				},
-				scene: {
-					preload: preload,
-					create: create,
-					update : update,
-				},
-				dom: {
-					createContainer: true
-				},
-				physics: {
-                    default: 'arcade',
-                    arcade: {
-                        gravity: { y: 300 },
-                        debug: false
-                    }
-                },
-			};
+    var currentWidth = 1280;
+    var currentHeight = 720;
+    currentWidth = currentHeight * (innerWidth/innerHeight);
+    
+    console.log("Original Width: " + innerWidth + " Current Game Width: " + currentWidth);
+    console.log("Original Height: " + innerHeight + " Current Game Height: " + currentHeight);
+    
+    var config = {
+        type: Phaser.AUTO,
+        backgroundColor: 'white',
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            _parent: 'container',
+            width: currentWidth,
+            height: currentHeight,
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update : update,
+        },
+        dom: {
+            createContainer: true
+        },
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 300 },
+                debug: false
+            }
+        },
+    };
 
-            $("document").ready(function(){
-                var game = new Phaser.Game(config);
-            });
+    $("document").ready(function(){
+        var game = new Phaser.Game(config);
+    });
+    
+    
+    var myGame, bg, pesawat, pointer,isrunning, buttonMulai, sapi1, sapi2, coin, avatar, timerbg, timerbar, timerclock, teksskor, awan1, awan2, awan3, burung1, coin1, burung1, timer, timerbarmask;
+    
+    var objectSpeed = 5;
+    var pesawatLastY, coin1LastY;
+    var timerbarInitialX = currentWidth/2-5;
+    var timerbarTimeoutX = (currentWidth/2-5) - 400;
+    
+    var gameTimer = 120;
+    var currentGameTimer = gameTimer;
+    var lostSeconds = 10;
+    var timerInterval, shakeable, score;
+    
+    // Variabel baru untuk tracking progress timer bar
+    var timerbarProgress = 0;
+    var timerbarTotalSteps = gameTimer;
+    
+    function preload ()
+    {
+        myGame = this;
+        
+        myGame.load.image('backgroundpesawat', 'backgroundpesawat.jpg');
+        myGame.load.image('awan1', 'awan1.png');
+        myGame.load.image('awan3', 'awan2.png');
+        myGame.load.image('awan2', 'awan3.png');
+        myGame.load.image('pesawat', 'pesawat.png');
+        myGame.load.image('button-mulai', 'button-mulai.png');
+        myGame.load.image('sapi-normal', 'sapi-normal.png');
+        myGame.load.image('coin', 'coin.png');
+        myGame.load.image('avatar', 'avatar.png');
+        myGame.load.image('timerbg', 'timerbg.png');
+        myGame.load.image('timerbar', 'timerbar.png');
+        myGame.load.image('timerclock', 'timerclock.png');
+        myGame.load.image('awan1', 'awan1.png');
+        myGame.load.image('awan2', 'awan2.png');
+        myGame.load.image('awan3', 'awan3.png');
+        myGame.load.image('burung1', 'burung1.png');
+        myGame.load.image('sapiNormal', 'sapi-normal.png');
+        myGame.load.image('sapiStress', 'sapi-stress.png');
+        
+    }
+
+    function create ()
+    {
+        
+        
+        bg = myGame.add.tileSprite(0, currentHeight, 3840, 720, 'backgroundpesawat');
+        bg.setOrigin(0,1);
+        
+        pesawat = myGame.physics.add.sprite(currentWidth/5, currentHeight/2, "pesawat");
+        pesawat.setScale(0.6);  
+        
+        sapi1 = myGame.add.sprite(pesawat.x-10, pesawat.y, "sapiNormal");
+        sapi1.setScale(0.5);
+        
+        sapi2 = myGame.add.sprite(pesawat.x+35, pesawat.y, "sapiNormal");
+        sapi2.setScale(0.5);
+        
+        myGame.input.on('pointerdown', function(pointer){
+            if(isrunning)
+                pesawat.body.setVelocityY(-200);
+        });
+        
+        
+        
+        
+        awan1 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan1");
+        awan1.setScale(0.5);
+        awan2 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan2");
+        awan2.setScale(0.5);
+        awan3 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan3");
+        awan3.setScale(0.5);
+        coin1 = myGame.physics.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "coin");
+        coin1.setScale(0.5);
+        coin1.body.allowGravity = false;
+        coin1.body.mass = 0;
+        burung1 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "burung1");
+        burung1.setScale(0.5);
+        
+        myGame.physics.world.enable([ pesawat, coin1 ]);
+        
+        
+        
+        avatar = myGame.add.sprite(currentWidth - 70, 62, "avatar");
+        avatar.setScale(0.33);
+        coin = myGame.add.sprite(currentWidth - 160, 66, "coin");
+        coin.setScale(0.32);
+        teksskor = myGame.add.text(currentWidth - 200, 66, "0", { fontFamily: "Comic Sans MS", fontSize : 40, fontWeight: "bold", color : "white" });
+        teksskor.fontWeight = 'bold';
+        teksskor.setOrigin(1, 0.5);
+        
+        timerbg = myGame.add.sprite(currentWidth/2-20, 62, "timerbg");
+        timerbg.setScale(0.35);
+        
+        timerbar = myGame.add.sprite(timerbarInitialX, 62, "timerbar");
+        timerbar.setScale(0.35);
+        
+        timerbarmask = myGame.make.image({
+            x: timerbarInitialX,
+            y: 62,
+            key: "timerbar",
+            add: false
+        });
+        
+        timerbarmask.setScale(0.35);
+        timerbar.mask = new Phaser.Display.Masks.BitmapMask(this, timerbarmask);
+        
+        
+        timerclock = myGame.add.sprite(currentWidth/2-218, 58, "timerclock");
+        timerclock.setScale(0.35);
+        
+        
+        timer =  myGame.add.text(currentWidth/2, 62, "02:00", { font : "25px Arial", fontWeight: "bold", color : "white" });
+        timer.fontWeight = 'bold';
+        timer.setOrigin(0.5);
+        timer.setStroke("black", 6);
+
+        
+        buttonMulai = myGame.add.sprite(currentWidth/2, currentHeight/2, "button-mulai").setInteractive();
+        buttonMulai.on("pointerdown", function(){
+            if(!isrunning)
+                startTheGame();
+        });
+        
+        stopTheGame();
+        
+        
+    }
+    
+    function update()
+    {
+        if(isrunning){
+            sapi1.x = pesawat.x-10;
+            sapi1.y = pesawat.y;
             
-			
-			var myGame, bg, pesawat, pointer,isrunning, buttonMulai, sapi1, sapi2, coin, avatar, timerbg, timerbar, timerclock, teksskor, awan1, awan2, awan3, burung1, coin1, burung1, timer, timerbarmask;
-			
-			var objectSpeed = 5;
-			var pesawatLastY, coin1LastY;
-			var timerbarInitialX = currentWidth/2-5;
-			var timerbarTimeoutX = (currentWidth/2-5) - 400;
-			
-			var gameTimer = 120;
-			var currentGameTimer = gameTimer;
-			var lostSeconds = 10;
-			var timerInterval, shakeable, score;
-			
-			function preload ()
-			{
-			    myGame = this;
-			    
-				myGame.load.image('backgroundpesawat', 'backgroundpesawat.jpg');
-				myGame.load.image('awan1', 'awan1.png');
-				myGame.load.image('awan3', 'awan2.png');
-				myGame.load.image('awan2', 'awan3.png');
-				myGame.load.image('pesawat', 'pesawat.png');
-				myGame.load.image('button-mulai', 'button-mulai.png');
-				myGame.load.image('sapi-normal', 'sapi-normal.png');
-				myGame.load.image('coin', 'coin.png');
-				myGame.load.image('avatar', 'avatar.png');
-				myGame.load.image('timerbg', 'timerbg.png');
-				myGame.load.image('timerbar', 'timerbar.png');
-				myGame.load.image('timerclock', 'timerclock.png');
-				myGame.load.image('awan1', 'awan1.png');
-				myGame.load.image('awan2', 'awan2.png');
-				myGame.load.image('awan3', 'awan3.png');
-				myGame.load.image('burung1', 'burung1.png');
-				myGame.load.image('sapiNormal', 'sapi-normal.png');
-				myGame.load.image('sapiStress', 'sapi-stress.png');
-				
-			}
-
-			function create ()
-			{
-			    
-			    
-				bg = myGame.add.tileSprite(0, currentHeight, 3840, 720, 'backgroundpesawat');
-				bg.setOrigin(0,1);
-				
-				pesawat = myGame.physics.add.sprite(currentWidth/5, currentHeight/2, "pesawat");
-				pesawat.setScale(0.6);  
-				
-				sapi1 = myGame.add.sprite(pesawat.x-10, pesawat.y, "sapiNormal");
-				sapi1.setScale(0.5);
-				
-				sapi2 = myGame.add.sprite(pesawat.x+35, pesawat.y, "sapiNormal");
-				sapi2.setScale(0.5);
-				
-				myGame.input.on('pointerdown', function(pointer){
-				    if(isrunning)
-                        pesawat.body.setVelocityY(-200);
-                });
-                
-                
-                
-                
-                awan1 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan1");
-                awan1.setScale(0.5);
-                awan2 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan2");
-                awan2.setScale(0.5);
-                awan3 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "awan3");
-                awan3.setScale(0.5);
-                coin1 = myGame.physics.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "coin");
-                coin1.setScale(0.5);
-				coin1.body.allowGravity = false;
-				coin1.body.mass = 0;
-                burung1 = myGame.add.sprite(currentWidth + Phaser.Math.Between(100, currentWidth), Phaser.Math.Between(100, currentHeight - 100), "burung1");
-                burung1.setScale(0.5);
-				
-				myGame.physics.world.enable([ pesawat, coin1 ]);
-				
-                
-                
-                avatar = myGame.add.sprite(currentWidth - 70, 62, "avatar");
-				avatar.setScale(0.33);
-				coin = myGame.add.sprite(currentWidth - 160, 66, "coin");
-				coin.setScale(0.32);
-				teksskor = myGame.add.text(currentWidth - 200, 66, "0", { fontFamily: "Comic Sans MS", fontSize : 40, fontWeight: "bold", color : "white" });
-				teksskor.fontWeight = 'bold';
-				teksskor.setOrigin(1, 0.5);
-				
-				timerbg = myGame.add.sprite(currentWidth/2-20, 62, "timerbg");
-				timerbg.setScale(0.35);
-				
-				timerbar = myGame.add.sprite(timerbarInitialX, 62, "timerbar");
-				timerbar.setScale(0.35);
-				
-				timerbarmask = myGame.make.image({
-                    x: timerbarInitialX,
-                    y: 62,
-                    key: "timerbar",
-                    add: false
-                });
-				
-				timerbarmask.setScale(0.35);
-				timerbar.mask = new Phaser.Display.Masks.BitmapMask(this, timerbarmask);
-				
-				
-				timerclock = myGame.add.sprite(currentWidth/2-218, 58, "timerclock");
-				timerclock.setScale(0.35);
-				
-				
-				timer =  myGame.add.text(currentWidth/2, 62, "02:00", { font : "25px Arial", fontWeight: "bold", color : "white" });
-				timer.fontWeight = 'bold';
-				timer.setOrigin(0.5);
-				timer.setStroke("black", 6);
-
-                
-                buttonMulai = myGame.add.sprite(currentWidth/2, currentHeight/2, "button-mulai").setInteractive();
-				buttonMulai.on("pointerdown", function(){
-				    if(!isrunning)
-					    startTheGame();
-				});
-				
-				/*
-				myGame.physics.add.collider(pesawat, coin1, function () {
-					dapatcoin(pesawat, coin1);
-				});
-				*/
-				
+            sapi2.x = pesawat.x+35;
+            sapi2.y = pesawat.y;
+            
+            timer.text = secondsFormat(currentGameTimer);
+            teksskor.text = score;
+            
+            bg.tilePositionX += 2;
+            awan1.x -= objectSpeed;
+            awan2.x -= objectSpeed;
+            awan3.x -= objectSpeed;
+            coin1.x -= objectSpeed;
+            burung1.x -= objectSpeed;
+            
+            if(pesawat.y > currentHeight || pesawat.y < 0){
                 stopTheGame();
-				
-				
-			}
-			
-			function update()
-			{
-			    if(isrunning){
-					sapi1.x = pesawat.x-10;
-					sapi1.y = pesawat.y;
-					
-					sapi2.x = pesawat.x+35;
-					sapi2.y = pesawat.y;
-					
-					timer.text = secondsFormat(currentGameTimer);
-					teksskor.text = score;
-					
-			        bg.tilePositionX += 2;
-			        awan1.x -= objectSpeed;
-			        awan2.x -= objectSpeed;
-			        awan3.x -= objectSpeed;
-    			    coin1.x -= objectSpeed;
-    			    burung1.x -= objectSpeed;
-    			    
-    			    if(pesawat.y > currentHeight || pesawat.y < 0){
-    			        stopTheGame();
-    			    }
-    			    
-    			    if(awan1.x < -100){
-    			        awan1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-    			        awan1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-    			    }
-    			    if(awan2.x < -100){
-    			        awan2.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-    			        awan2.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-    			    }
-    			    if(awan3.x < -100){
-    			        awan3.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-    			        awan3.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-    			    }
-    			    if(coin1.x < -100){
-    			        coin1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-    			        coin1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-    			    }
-    			    if(burung1.x < -100){
-    			        burung1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-    			        burung1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-    			    }
-					
-					if(Phaser.Math.Distance.BetweenPoints(pesawat, coin1) < 100){
-						dapatcoin();
-					}
-					if(Phaser.Math.Distance.BetweenPoints(pesawat, awan1) < 100){
-						shakeit();
-					}
-					if(Phaser.Math.Distance.BetweenPoints(pesawat, awan2) < 100){
-						shakeit();
-					}
-					if(Phaser.Math.Distance.BetweenPoints(pesawat, awan3) < 100){
-						shakeit();
-					}
-					if(Phaser.Math.Distance.BetweenPoints(pesawat, burung1) < 100){
-						shakeit();
-					}
-					
-					/*
-					if(isNaN(pesawat.body.y)){
-						console.log("pesawat isNaN happened!");
-						pesawat.body.y = pesawatLastY;
-						pesawat.y = pesawatLastY;
-					}else{
-						pesawatLastY = pesawat.body.y-20;
-					}
-					
-					if(isNaN(coin1.body.y)){
-						console.log("Coin1 isNaN happened!");
-						coin1.body.y = coin1LastY;
-						coin1.y = coin1LastY;
-					}else{
-						coin1LastY = coin1.body.y-20;
-					}
-					*/
-					
-					
-					
-			    }
-			}
-			
-			function startTheGame(){
-				
-				score = 0;
-			    isrunning = true;
-    			myGame.physics.world.enable([ pesawat, coin1]);
-    			buttonMulai.setAlpha(0.0001);
-    			buttonMulai.setInteractive(false);
-    			pesawat.x = currentWidth/5
-    			pesawat.y = currentHeight/2;
-				coin1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
-				coin1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
-				timerbar.x = timerbarInitialX;
-				
-				shakeable = true;
-				
-				currentGameTimer = gameTimer;
-				
-				clearInterval(timerInterval);
-				timerInterval = setInterval(function(){
-					
-					if(currentGameTimer > 0){
-						currentGameTimer--;
-						timerbar.x -= (timerbarInitialX - timerbarTimeoutX) / Math.ceil(gameTimer);
-					}else{
-						stopTheGame();
-						alert("Waktu Habis!");
-					}
-					
-				}, 1000);
-				
-			}
-			
-			function stopTheGame(){
-			    isrunning = false;
-    			myGame.physics.world.disable([ pesawat, coin1 ]);
-    			buttonMulai.setAlpha(1);
-    			buttonMulai.setInteractive(true);
-				clearInterval(timerInterval);
-			}
-			
-			function secondsFormat(sc){
-				if(sc > 0){
-					var minutes = Math.floor(sc/60);
-					minutes = padTo2Digits(minutes);
-					var seconds = sc % 60;
-					seconds = padTo2Digits(seconds);
-					return minutes+":"+seconds;
-				}else{
-					return "00:00";
-				}
-				
-			}
-			
-			function padTo2Digits(num) {
-				return num.toString().padStart(2, '0');
-			}
-			
-			function dapatcoin(){
-				score += 10;
-				coin1.x += currentWidth;
-				coin1.y = Phaser.Math.Between(100, currentHeight - 100);
+            }
+            
+            if(awan1.x < -100){
+                awan1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+                awan1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+            }
+            if(awan2.x < -100){
+                awan2.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+                awan2.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+            }
+            if(awan3.x < -100){
+                awan3.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+                awan3.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+            }
+            if(coin1.x < -100){
+                coin1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+                coin1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+            }
+            if(burung1.x < -100){
+                burung1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+                burung1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+            }
+            
+            if(Phaser.Math.Distance.BetweenPoints(pesawat, coin1) < 100){
+                dapatcoin();
+            }
+            if(Phaser.Math.Distance.BetweenPoints(pesawat, awan1) < 100){
+                shakeit();
+            }
+            if(Phaser.Math.Distance.BetweenPoints(pesawat, awan2) < 100){
+                shakeit();
+            }
+            if(Phaser.Math.Distance.BetweenPoints(pesawat, awan3) < 100){
+                shakeit();
+            }
+            if(Phaser.Math.Distance.BetweenPoints(pesawat, burung1) < 100){
+                shakeit();
+            }
+        }
+    }
+    
+    function startTheGame(){
+        score = 0;
+        isrunning = true;
+        myGame.physics.world.enable([ pesawat, coin1]);
+        buttonMulai.setAlpha(0.0001);
+        buttonMulai.setInteractive(false);
+        pesawat.x = currentWidth/5
+        pesawat.y = currentHeight/2;
+        coin1.x = parseInt(currentWidth + Phaser.Math.Between(100, currentWidth));
+        coin1.y = parseInt(Phaser.Math.Between(100, currentHeight - 100));
+        
+        // Reset timer bar ke posisi awal
+        timerbar.x = timerbarInitialX;
+        timerbarProgress = 0;
+        
+        shakeable = true;
+        currentGameTimer = gameTimer;
+        
+        clearInterval(timerInterval);
+        timerInterval = setInterval(function(){
+            
+            if(currentGameTimer > 0){
+                currentGameTimer--;
+                timerbarProgress++;
+                
+                // Update posisi timerbar berdasarkan progress
+                var progressPercentage = timerbarProgress / timerbarTotalSteps;
+                timerbar.x = timerbarInitialX - (progressPercentage * (timerbarInitialX - timerbarTimeoutX));
+                
+            }else{
+                // Pastikan timerbar tepat di ujung kiri saat waktu habis
+                timerbar.x = timerbarTimeoutX;
+                stopTheGame();
+                alert("Waktu Habis!");
+            }
+            
+        }, 1000);
+        
+    }
+    
+    function stopTheGame(){
+        isrunning = false;
+        myGame.physics.world.disable([ pesawat, coin1 ]);
+        buttonMulai.setAlpha(1);
+        buttonMulai.setInteractive(true);
+        clearInterval(timerInterval);
+    }
+    
+    function secondsFormat(sc){
+        if(sc > 0){
+            var minutes = Math.floor(sc/60);
+            minutes = padTo2Digits(minutes);
+            var seconds = sc % 60;
+            seconds = padTo2Digits(seconds);
+            return minutes+":"+seconds;
+        }else{
+            return "00:00";
+        }
+        
+    }
+    
+    function padTo2Digits(num) {
+        return num.toString().padStart(2, '0');
+    }
+    
+    function dapatcoin(){
+        score += 10;
+        coin1.x += currentWidth;
+        coin1.y = Phaser.Math.Between(100, currentHeight - 100);
 
-			}
-			
-			function shakeit(){
-				myGame.cameras.main.shake(50,0.01);
-				sapi1.setTexture("sapiStress");
-				sapi2.setTexture("sapiStress");
-				if(shakeable){
-					currentGameTimer-=lostSeconds;
-					shakeable = false;
-					setTimeout(function(){
-						shakeable = true;
-					}, 2000);
-					setTimeout(function(){
-						sapi1.setTexture("sapiNormal");
-						sapi2.setTexture("sapiNormal");
-					}, 4000);
-				}
-				
-			}
-			
-        </script>
+    }
+    
+    function shakeit(){
+        myGame.cameras.main.shake(50,0.01);
+        sapi1.setTexture("sapiStress");
+        sapi2.setTexture("sapiStress");
+        if(shakeable){
+            currentGameTimer -= lostSeconds;
+            
+            // Update progress dan posisi timerbar saat kehilangan waktu
+            timerbarProgress += lostSeconds;
+            var progressPercentage = timerbarProgress / timerbarTotalSteps;
+            timerbar.x = timerbarInitialX - (progressPercentage * (timerbarInitialX - timerbarTimeoutX));
+            
+            shakeable = false;
+            setTimeout(function(){
+                shakeable = true;
+            }, 2000);
+            setTimeout(function(){
+                sapi1.setTexture("sapiNormal");
+                sapi2.setTexture("sapiNormal");
+            }, 4000);
+        }
+        
+    }
+    
+</script>
     </body>
 </html>
